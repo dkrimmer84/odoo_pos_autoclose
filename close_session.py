@@ -11,6 +11,7 @@ class Autocloser():
     username = os.environ['ODOO_USERNAME']
     password = os.environ['ODOO_PASSWORD']
     logging_file = 'closing.log'
+    max_cash_register_difference_default = 1500 # positive and negative
 
     # Set up Logging: 
     logger = logging.getLogger(__name__)
@@ -20,10 +21,11 @@ class Autocloser():
     file_handler.setFormatter(formatter)
     logger.addHandler(file_handler)
 
-    max_cash_register_difference = 1500 # positive and negative
-    
-    def __init__(self, point_of_sales):
+    def __init__(self, point_of_sales, max_cash_register_difference):
         self.point_of_sales = point_of_sales
+        self.max_cash_register_difference = self.max_cash_register_difference_default
+        if max_cash_register_difference:
+            self.max_cash_register_difference = max_cash_register_difference
 
     def login(self):
         common = xmlrpc.client.ServerProxy('{}/xmlrpc/2/common'.format(self.url))
@@ -44,8 +46,10 @@ class Autocloser():
         ]])
 
         print('Configuration and Connection OK')
+        print(f"Maximum cash register difference allowed: {str(self.max_cash_register_difference)}")
         print(f"Sessions in Closing Control: {str(len(opened_sessions))}")
         self.logger.info(f"Odoo Session Auto Closer: Configuration and Connection OK")
+        self.logger.info(f"Maximum cash register difference allowed: {str(self.max_cash_register_difference)}")
         self.logger.info(f"Sessions in Closing Control: {str(len(opened_sessions))}")
 
         return opened_sessions
@@ -124,7 +128,9 @@ class Autocloser():
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Autoclose POS sessions in Odoo')
     parser.add_argument('-pos', '--point_of_sales', type=str, help='comma separated list of POS IDs to close', required=True)
+    parser.add_argument('-maxdiff', '--max-cash-register-difference', dest='max_cash_register_difference', type=int, help='maximum cash register difference to allow when closing a session')
     args = parser.parse_args()
     point_of_sales = [int(pos_id) for pos_id in args.point_of_sales.split(',')]
-    auto_closer = Autocloser(point_of_sales)
+    max_cash_register_difference=args.max_cash_register_difference if args.max_cash_register_difference else False
+    auto_closer = Autocloser(point_of_sales, max_cash_register_difference)
     auto_closer.close_session()

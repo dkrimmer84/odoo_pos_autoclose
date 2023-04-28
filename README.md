@@ -1,6 +1,6 @@
 # Odoo POS Session Auto Closer
 
-This script allows you to automatically close Point of Sale (POS) sessions in Odoo that are in a 'closing control' state. It validates all orders in the session and then closes it.
+This script allows you to automatically close Point of Sale (POS) sessions in Odoo that are in a 'closing control' state. It validates all orders in the session and then closes it. I've tested this only on Odoo Version 12. Feel free to submit pull requests for other versions of Odoo. 
 
 ## Requirements
 - Python 3
