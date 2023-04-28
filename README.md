@@ -5,12 +5,15 @@ This script allows you to automatically close Point of Sale (POS) sessions in Od
 ## Requirements
 - Python 3
 - Odoo installation with XML-RPC enabled
+- Odoo database credentials with permissions to manage POS sessions
 
 ## Usage
 To use the script, simply run it with Python 3 and pass in the IDs of the POS sessions you want to close as arguments. For example:
 
 ```
 python3 close_session.py -pos=11,13
+# optional with maximum cash register difference, this will overwrite the default of 1500
+python3 close_session.py -pos=11 -maxdiff=1000
 ```
 
 This will close all POS sessions with IDs 11 and 13.
