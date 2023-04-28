@@ -2,6 +2,7 @@ import xmlrpc.client
 import time
 import logging
 import os
+import argparse
 
 class Autocloser():
     # Storing credentials in .bash_profile
@@ -21,6 +22,9 @@ class Autocloser():
 
     max_cash_register_difference = 1500 # positive and negative
     
+    def __init__(self, point_of_sales):
+        self.point_of_sales = point_of_sales
+
     def login(self):
         common = xmlrpc.client.ServerProxy('{}/xmlrpc/2/common'.format(self.url))
         uid = common.authenticate(self.db, self.username, self.password, {})
@@ -36,7 +40,7 @@ class Autocloser():
         # Replace IDs with your specific POS configuration IDs
         opened_sessions = models.execute_kw(self.db, uid, self.password, 'pos.session', 'search', [[
             ('state', '=', 'closing_control'),
-            ('config_id', 'in', [13,8])
+            ('config_id', 'in', self.point_of_sales)
         ]])
 
         print('Configuration and Connection OK')
@@ -118,7 +122,9 @@ class Autocloser():
                 return False
     
 if __name__ == '__main__':
-    auto_closer = Autocloser()
-    #auto_closer.setup_logging()
+    parser = argparse.ArgumentParser(description='Autoclose POS sessions in Odoo')
+    parser.add_argument('-pos', '--point_of_sales', type=str, help='comma separated list of POS IDs to close', required=True)
+    args = parser.parse_args()
+    point_of_sales = [int(pos_id) for pos_id in args.point_of_sales.split(',')]
+    auto_closer = Autocloser(point_of_sales)
     auto_closer.close_session()
-        
