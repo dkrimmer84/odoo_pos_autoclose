@@ -3,7 +3,18 @@ import time
 import logging
 import os
 import argparse
+import http.client
+from xmlrpc.client import Transport
 
+class TimeoutTransport(Transport):
+    def __init__(self, timeout=3600, *args, **kwargs):
+        self.timeout = timeout
+        super().__init__(*args, **kwargs)
+
+    def make_connection(self, host):
+        conn = http.client.HTTPConnection(host, timeout=self.timeout)
+        return conn
+    
 class Autocloser():
     # Storing credentials in .bash_profile
     url = os.environ['ODOO_URL']
@@ -37,7 +48,9 @@ class Autocloser():
         uid = self.login()
         print(f"Connecting to {self.url} to databse {self.db} with credentials from {self.username}") 
         # Create the models proxy
-        models = xmlrpc.client.ServerProxy('{}/xmlrpc/2/object'.format(self.url), timeout=self.odoo_server_timeout)
+        # models = xmlrpc.client.ServerProxy('{}/xmlrpc/2/object'.format(self.url), timeout=self.odoo_server_timeout)
+        timeout_transport = TimeoutTransport(timeout=self.odoo_server_timeout)
+        models = xmlrpc.client.ServerProxy('{}/xmlrpc/2/object'.format(self.url), transport=timeout_transport)
 
         # Find all opened POS sessions for POS Stores with specific IDs
         # Replace IDs with your specific POS configuration IDs
@@ -62,7 +75,9 @@ class Autocloser():
         # Close all sessions in state CLOSING CONTROL
         opened_sessions = self.get_open_sessions()
         for session_id in opened_sessions:
-            models = xmlrpc.client.ServerProxy('{}/xmlrpc/2/object'.format(self.url), timeout=self.odoo_server_timeout)
+            # models = xmlrpc.client.ServerProxy('{}/xmlrpc/2/object'.format(self.url), timeout=self.odoo_server_timeout)
+            timeout_transport = TimeoutTransport(timeout=self.odoo_server_timeout)
+            models = xmlrpc.client.ServerProxy('{}/xmlrpc/2/object'.format(self.url), transport=timeout_transport)
             print(f"Identified open session {session_id}")
             try:
                 print(f"Try closing session {session_id}")
