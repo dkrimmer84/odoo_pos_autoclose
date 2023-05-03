@@ -12,6 +12,7 @@ class Autocloser():
     password = os.environ['ODOO_PASSWORD']
     logging_file = 'closing.log'
     max_cash_register_difference_default = 1500 # positive and negative
+    odoo_server_timeout = 3600
 
     # Set up Logging: 
     logger = logging.getLogger(__name__)
@@ -36,7 +37,7 @@ class Autocloser():
         uid = self.login()
         print(f"Connecting to {self.url} to databse {self.db} with credentials from {self.username}") 
         # Create the models proxy
-        models = xmlrpc.client.ServerProxy('{}/xmlrpc/2/object'.format(self.url))
+        models = xmlrpc.client.ServerProxy('{}/xmlrpc/2/object'.format(self.url), timeout=self.odoo_server_timeout)
 
         # Find all opened POS sessions for POS Stores with specific IDs
         # Replace IDs with your specific POS configuration IDs
@@ -61,7 +62,7 @@ class Autocloser():
         # Close all sessions in state CLOSING CONTROL
         opened_sessions = self.get_open_sessions()
         for session_id in opened_sessions:
-            models = xmlrpc.client.ServerProxy('{}/xmlrpc/2/object'.format(self.url))
+            models = xmlrpc.client.ServerProxy('{}/xmlrpc/2/object'.format(self.url), timeout=self.odoo_server_timeout)
             print(f"Identified open session {session_id}")
             try:
                 print(f"Try closing session {session_id}")
